@@ -1,14 +1,14 @@
-from model.sheep_model import Sheep
-from model.wolf_model import Wolf
-import random
+import playground
 
 if __name__ == '__main__':
-    print("wait for it")
-    # sheep_list = []
-    # for i in range(4):
-    #     sheep_list.append(Sheep(init_pos_limit=10))
-    # for i in sheep_list:
-    #     print(i)
-    # print()
-    # wolf = Wolf()
-    # wolf.move(10,sheep_list)
+    simulation = playground.Simulation(sheep_init_pos_limit=10.0, sheep_move_dist=0.5, wolf_move_dist=1.0,
+                                       sheep_number=4, round_number=5)
+
+    for i in range(40):
+        simulation.run_round()
+
+
+
+
+
+

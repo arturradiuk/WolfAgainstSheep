@@ -16,5 +16,5 @@ class Point:
         dy = self.y - other_point.y
         return math.sqrt(dx ** 2 + dy ** 2)
 
-    def __str__(self) -> str:
+    def __str__(self):
         return "[" + str(self.x) + ", " + str(self.y) + "]"
