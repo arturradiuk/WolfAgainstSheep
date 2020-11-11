@@ -49,7 +49,8 @@ class Simulation:
 
     def run_rounds(self):
         for i in range(self.round_number):
-            print "-- ", i, " -- round start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            print("-- ", i,
+                  " -- round start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
             self.print_wolf()
             # self.print_sheep()
             # self.playground.draw()
@@ -57,12 +58,12 @@ class Simulation:
                 sheep.move(sheep_move_dist=self.sheep_move_dist)
 
             self.playground.wolf.move(wolf_move_dist=self.wolf_move_dist, sheep_list=self.playground.sheep_list)
-            print "@ Alive sheep number: ", len(self.playground.sheep_list)
-            print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-            print "\n"
+            print("@ Alive sheep number: ", len(self.playground.sheep_list))
+            print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+            print("\n")
 
     def print_sheep(self):
-        print ('\n'.join(map(str, self.playground.sheep_list)))
+        print('\n'.join(map(str, self.playground.sheep_list)))
 
     def print_wolf(self):
-        print (self.playground.wolf.__str__())
+        print(self.playground.wolf.__str__())
