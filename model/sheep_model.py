@@ -10,7 +10,7 @@ class Sheep:
         # self.alive = True
 
     def __str__(self):
-        return "Sheep: uid = " + self.uid.__str__() + "; position = " + self.position.__str__()
+        return " Sheep: uid = " + self.uid.__str__() + "; position = " + self.position.__str__()
 
     def __repr__(self):
         return str(self)

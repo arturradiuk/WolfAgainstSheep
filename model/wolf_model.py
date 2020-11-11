@@ -15,6 +15,7 @@ class Wolf:
         if (sheep_list.__len__() != 0):
             if (distances[0][1] < wolf_move_dist):
                 self.position = sheep_list[distances[0][0]].position
+                print sheep_list[distances[0][0]], " is killed"
                 del sheep_list[distances[0][0]]
             else:
                 closest_dist = distances[0][1]
@@ -44,19 +45,9 @@ class Wolf:
                         self.position.y -= w_y
                     else:
                         self.position.y += w_y
-                #
-                # if sheep_list[distances[0][0]].position.x > 0:
-                #     self.position.x += w_x
-                # else:
-                #     self.position.x -= w_x
-                #
-                # if sheep_list[distances[0][0]].position.y > 0:
-                #     self.position.y += w_y
-                # else:
-                #     self.position.y -= w_y
 
     def __str__(self):
-        return "#Wolf: position = " + self.position.__str__()
+        return "# Wolf: position = " + self.position.__str__()
 
     def __repr__(self):
         return str(self)
