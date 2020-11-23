@@ -1,6 +1,8 @@
 from model.sheep_model import Sheep
 from model.wolf_model import Wolf
 import matplotlib.pyplot as plt
+import json
+import csv
 
 
 class Playground:  # field for playing
@@ -42,6 +44,9 @@ class Simulation:
         self.sheep_number = sheep_number
         self.round_number = round_number
 
+        self.rounds = []
+        self.alive_sheep = []
+
         wolf = Wolf()
         sheep_list = []
         for i in range(sheep_number):
@@ -49,20 +54,41 @@ class Simulation:
         self.playground = Playground(wolf, sheep_list)
 
     def run_rounds(self):
+
         for i in range(self.round_number):
-            # self.playground.draw()
+            self.playground.draw()  # todo realize as mode
             print(
                 "-- ", i,
                 " -- round start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
             print(self.playground.wolf.__str__())
 
-            if (self.playground.get_alive_sheep_number() != 0):
+            if self.playground.get_alive_sheep_number() != 0:
                 for sheep in self.playground.sheep_list:
                     sheep.move(sheep_move_dist=self.sheep_move_dist)
 
-            if (self.playground.get_alive_sheep_number() != 0):
+            if self.playground.get_alive_sheep_number() != 0:
                 self.playground.wolf.move(wolf_move_dist=self.wolf_move_dist, sheep_list=self.playground.sheep_list)
 
             print("@ Alive sheep number: ", self.playground.get_alive_sheep_number())
             print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
             print("\n")
+
+            sheep_positions = []
+            for s in self.playground.sheep_list:
+                sheep_positions.append(s.position)
+            round_ = {'round_no': i, 'wolf_pos': self.playground.wolf.position, 'sheep_pos': sheep_positions}
+            self.rounds.append(round_)
+
+            self.alive_sheep.append([i, self.playground.get_alive_sheep_number()])
+
+        self.rounds = json.dumps(self.rounds, default=lambda o: o.__dict__)
+        with open('pos.json', 'w') as outfile:
+            outfile.write(self.rounds)
+
+        with open('alive.csv', 'w', newline='') as file:
+            fieldnames = ['round', 'alive_sheep']
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+            writer.writeheader()
+            for as_ in self.alive_sheep:
+                writer.writerow({'round': as_[0], 'alive_sheep': as_[1]})

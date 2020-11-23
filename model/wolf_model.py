@@ -8,8 +8,6 @@ class Wolf:
         self.position = Point()
 
     def move(self, wolf_move_dist, sheep_list):
-        print ("from wolf move")
-
         distances = []
 
         for i in range(len(sheep_list)):
@@ -22,9 +20,9 @@ class Wolf:
                 if (distances[0][1] < wolf_move_dist):
                     self.position = sheep_list[distances[0][0]].position
                     print (sheep_list[distances[0][0]], " is killed")
-                    # del sheep_list[distances[0][0]]
                     sheep_list[distances[0][0]].alive = False
-                    # sheep_list[distances[0][0]].position = None
+                    sheep_list[distances[0][0]].position = None
+
 
                 else:
                     closest_dist = distances[0][1]
@@ -33,7 +31,7 @@ class Wolf:
                     w_y = (wolf_move_dist * (
                         math.fabs(sheep_list[distances[0][0]].position.y - self.position.y))) / closest_dist
 
-                    if sheep_list[distances[0][0]].position.x > 0:
+                    if sheep_list[distances[0][0]].position.x > 0:  # todo remove duplicates
                         if (self.position.x - sheep_list[distances[0][0]].position.x > 0):
                             self.position.x -= w_x
                         else:
@@ -56,9 +54,7 @@ class Wolf:
                             self.position.y += w_y
 
     def __str__(self):
-        temp = 1
-        temp_str = self.position.__str__()
-        return "# Wolf: position = " + temp_str
+        return "# Wolf: position = " + self.position.__str__()
 
     def __repr__(self):
         return str(self)

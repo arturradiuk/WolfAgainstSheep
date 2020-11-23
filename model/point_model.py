@@ -4,7 +4,7 @@ import random
 
 class Point:
     def __init__(self, rand=False, pos_limit=0):
-        if (rand == False):
+        if rand == False:
             self.x = 0
             self.y = 0
         else:
@@ -18,7 +18,6 @@ class Point:
 
     def __str__(self):
         return "[" + str(round(self.x, 3)) + ", " + str(round(self.y, 3)) + "]"
-        # return "[" + str(self.x) + ", " + str(self.y) + "]"
 
     def __repr__(self):
         return str(self)
