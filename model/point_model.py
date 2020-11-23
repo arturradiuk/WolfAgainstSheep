@@ -17,4 +17,8 @@ class Point:
         return math.sqrt(dx ** 2 + dy ** 2)
 
     def __str__(self):
-        return "[" + str(round(self.x,3)) + ", " + str(round(self.y,3)) + "]"
+        return "[" + str(round(self.x, 3)) + ", " + str(round(self.y, 3)) + "]"
+        # return "[" + str(self.x) + ", " + str(self.y) + "]"
+
+    def __repr__(self):
+        return str(self)

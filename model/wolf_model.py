@@ -8,46 +8,57 @@ class Wolf:
         self.position = Point()
 
     def move(self, wolf_move_dist, sheep_list):
+        print ("from wolf move")
+
         distances = []
+
         for i in range(len(sheep_list)):
-            distances.append([i, self.position.calculate_distance(sheep_list[i].position)])
-        distances.sort(key=lambda n: n[1], reverse=False)
-        if (sheep_list.__len__() != 0):
-            if (distances[0][1] < wolf_move_dist):
-                self.position = sheep_list[distances[0][0]].position
-                print (sheep_list[distances[0][0]], " is killed")
-                del sheep_list[distances[0][0]]
-            else:
-                closest_dist = distances[0][1]
-                w_x = (wolf_move_dist * (
-                    math.fabs(sheep_list[distances[0][0]].position.x - self.position.x))) / closest_dist
-                w_y = (wolf_move_dist * (
-                    math.fabs(sheep_list[distances[0][0]].position.y - self.position.y))) / closest_dist
+            if (sheep_list[i].alive == True):
+                distances.append([i, self.position.calculate_distance(sheep_list[i].position)])
 
-                if sheep_list[distances[0][0]].position.x > 0:
-                    if (self.position.x - sheep_list[distances[0][0]].position.x > 0):
-                        self.position.x -= w_x
-                    else:
-                        self.position.x += w_x
-                else:
-                    if (self.position.x - sheep_list[distances[0][0]].position.x > 0):
-                        self.position.x -= w_x
-                    else:
-                        self.position.x += w_x
+        if distances.__len__() != 0:
+            distances.sort(key=lambda n: n[1], reverse=False)
+            if (sheep_list.__len__() != 0):
+                if (distances[0][1] < wolf_move_dist):
+                    self.position = sheep_list[distances[0][0]].position
+                    print (sheep_list[distances[0][0]], " is killed")
+                    # del sheep_list[distances[0][0]]
+                    sheep_list[distances[0][0]].alive = False
+                    # sheep_list[distances[0][0]].position = None
 
-                if sheep_list[distances[0][0]].position.y > 0:
-                    if (self.position.y - sheep_list[distances[0][0]].position.y > 0):
-                        self.position.y -= w_y
-                    else:
-                        self.position.y += w_y
                 else:
-                    if (self.position.y - sheep_list[distances[0][0]].position.y > 0):
-                        self.position.y -= w_y
+                    closest_dist = distances[0][1]
+                    w_x = (wolf_move_dist * (
+                        math.fabs(sheep_list[distances[0][0]].position.x - self.position.x))) / closest_dist
+                    w_y = (wolf_move_dist * (
+                        math.fabs(sheep_list[distances[0][0]].position.y - self.position.y))) / closest_dist
+
+                    if sheep_list[distances[0][0]].position.x > 0:
+                        if (self.position.x - sheep_list[distances[0][0]].position.x > 0):
+                            self.position.x -= w_x
+                        else:
+                            self.position.x += w_x
                     else:
-                        self.position.y += w_y
+                        if (self.position.x - sheep_list[distances[0][0]].position.x > 0):
+                            self.position.x -= w_x
+                        else:
+                            self.position.x += w_x
+
+                    if sheep_list[distances[0][0]].position.y > 0:
+                        if (self.position.y - sheep_list[distances[0][0]].position.y > 0):
+                            self.position.y -= w_y
+                        else:
+                            self.position.y += w_y
+                    else:
+                        if (self.position.y - sheep_list[distances[0][0]].position.y > 0):
+                            self.position.y -= w_y
+                        else:
+                            self.position.y += w_y
 
     def __str__(self):
-        return "# Wolf: position = " + self.position.__str__()
+        temp = 1
+        temp_str = self.position.__str__()
+        return "# Wolf: position = " + temp_str
 
     def __repr__(self):
         return str(self)
