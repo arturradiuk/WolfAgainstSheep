@@ -1,11 +1,14 @@
 from model.point_model import Point
 import math
+import logging
 
 
 class Wolf:
 
     def __init__(self):
         self.position = Point()
+        log = "Wolf.__init__() called"
+        logging.debug(log)
 
     def move(self, wolf_move_dist, sheep_list):
         distances = []
@@ -19,7 +22,7 @@ class Wolf:
             if (sheep_list.__len__() != 0):
                 if (distances[0][1] < wolf_move_dist):
                     self.position = sheep_list[distances[0][0]].position
-                    print (sheep_list[distances[0][0]], " is killed")
+                    print(sheep_list[distances[0][0]], " is killed")
                     sheep_list[distances[0][0]].alive = False
                     sheep_list[distances[0][0]].position = None
 
@@ -52,9 +55,16 @@ class Wolf:
                             self.position.y -= w_y
                         else:
                             self.position.y += w_y
+        log = "Wolf.move() called"
+        logging.debug(log)
 
     def __str__(self):
-        return "# Wolf: position = " + self.position.__str__()
+        temp = "# Wolf: position = " + self.position.__str__()
+        log = "Wolf.move() called, returned ", temp
+        logging.debug(log)
+        return temp
 
     def __repr__(self):
+        log = "Wolf.__repr__() called, returned ", str(self)
+        logging.debug(log)
         return str(self)

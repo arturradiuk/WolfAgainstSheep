@@ -3,6 +3,8 @@ from model.wolf_model import Wolf
 import matplotlib.pyplot as plt
 import json
 import csv
+import os
+import logging
 
 
 class Playground:  # field for playing
@@ -12,12 +14,16 @@ class Playground:  # field for playing
     def __init__(self, wolf, sheep):
         self.wolf = wolf
         self.sheep_list = sheep
+        log = "Playground.__init__(",self,wolf, sheep, ") called"
+        logging.debug(log)
 
     def get_alive_sheep_number(self):
         n = 0
         for s in self.sheep_list:
             if (s.alive == True):
                 n += 1
+        log = "Playground.get_alive_sheep_number(", self,") called, returned ",n
+        logging.debug(log)
         return n
 
     def draw(self):
@@ -33,12 +39,14 @@ class Playground:  # field for playing
         plt.scatter(-20, -20, s=1)
 
         plt.show()
+        log = "Playground.draw(", self, ") called"
+        logging.debug(log)
 
 
 class Simulation:
 
-    def __init__(self, sheep_init_pos_limit, sheep_move_dist, wolf_move_dist, sheep_number, round_number):
-        self.sheep_init_pos_limit = sheep_init_pos_limit
+    def __init__(self, init_pos_limit, sheep_move_dist, wolf_move_dist, sheep_number, round_number, directory, wait):
+        self.sheep_init_pos_limit = init_pos_limit
         self.sheep_move_dist = sheep_move_dist
         self.wolf_move_dist = wolf_move_dist
         self.sheep_number = sheep_number
@@ -53,10 +61,15 @@ class Simulation:
             sheep_list.append(Sheep(init_pos_limit=10, uid=i))
         self.playground = Playground(wolf, sheep_list)
 
+        self.directory = directory
+        self.wait = wait
+        log = "Simulation.__init__(", self,init_pos_limit, sheep_move_dist, wolf_move_dist, sheep_number, round_number, directory, wait, ") called"
+        logging.debug(log)
+
     def run_rounds(self):
 
         for i in range(self.round_number):
-            self.playground.draw()  # todo realize as mode
+            # self.playground.draw()  # todo realize as mode
             print(
                 "-- ", i,
                 " -- round start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
@@ -81,14 +94,44 @@ class Simulation:
 
             self.alive_sheep.append([i, self.playground.get_alive_sheep_number()])
 
+            if self.wait:
+                os.system('read -sn 1 -p "Press any key to continue..."')
+
         self.rounds = json.dumps(self.rounds, default=lambda o: o.__dict__)
-        with open('pos.json', 'w') as outfile:
-            outfile.write(self.rounds)
 
-        with open('alive.csv', 'w', newline='') as file:
-            fieldnames = ['round', 'alive_sheep']
-            writer = csv.DictWriter(file, fieldnames=fieldnames)
+        if self.directory:
+            if not os.path.exists(self.directory):
+                # print("created")
+                os.mkdir(self.directory)
+            os.chdir(self.directory)
 
-            writer.writeheader()
-            for as_ in self.alive_sheep:
-                writer.writerow({'round': as_[0], 'alive_sheep': as_[1]})
+            with open('pos.json', 'w') as outfile:
+                outfile.write(self.rounds)
+            os.chdir('../')
+        else:
+            with open('pos.json', 'w') as outfile:
+                outfile.write(self.rounds)
+
+        if self.directory:
+            if not os.path.exists(self.directory):
+                # print("created")
+                os.mkdir(self.directory)
+            os.chdir(self.directory)
+            with open('alive.csv', 'w') as file:
+                fieldnames = ['round', 'alive_sheep']
+                writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+                writer.writeheader()
+                for as_ in self.alive_sheep:
+                    writer.writerow({'round': as_[0], 'alive_sheep': as_[1]})
+        else:
+            with open('alive.csv', 'w') as file:
+                fieldnames = ['round', 'alive_sheep']
+                writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+                writer.writeheader()
+                for as_ in self.alive_sheep:
+                    writer.writerow({'round': as_[0], 'alive_sheep': as_[1]})
+
+        log = "Simulation.run_rounds(", self, ") called"
+        logging.debug(log)

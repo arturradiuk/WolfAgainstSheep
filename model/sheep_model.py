@@ -1,5 +1,6 @@
 from model.point_model import Point
 import random
+import logging
 
 
 class Sheep:
@@ -8,6 +9,8 @@ class Sheep:
         self.position = Point(rand=True, pos_limit=init_pos_limit)
         self.uid = uid
         self.alive = True
+        log = "Sheep.__init__(", init_pos_limit, uid, ") called"
+        logging.debug(log)
 
     def move(self, sheep_move_dist):
         if self.alive == True:
@@ -21,8 +24,17 @@ class Sheep:
             elif rand_num == 3:
                 self.position.x -= sheep_move_dist
 
+        log = "Sheep.move(", sheep_move_dist, ") called"
+        logging.debug(log)
+
     def __str__(self):
-        return "@ Sheep: uid = " + self.uid.__str__() + "; position = " + self.position.__str__()
+        res = "@ Sheep: uid = " + self.uid.__str__() + "; position = " + self.position.__str__()
+        log = "Sheep.move() called, returned ", res
+        logging.debug(log)
+        return res
 
     def __repr__(self):
-        return str(self)
+        res = str(self)
+        log = "Sheep.move() called, returned ", res
+        logging.debug(log)
+        return res
