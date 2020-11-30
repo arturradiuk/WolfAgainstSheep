@@ -13,17 +13,18 @@ def parse_config(file):
     if float(init) < 0 or float(sheep) < 0 or float(wolf) < 0:
         logging.error("The numbers in conf file must be positive")
         raise ValueError("Not positive number")
-    # log = "parse_config(", file, ") called, returned ", float(init), float(sheep), float(wolf)
-    # logging.debug(log)
+    log = "parse_config(", file, ") called, returned ", float(init), float(sheep), float(wolf)
+    logging.debug(log)
     return float(init), float(sheep), float(wolf)
 
 
 def is_positive(value):
     int_value = int(value)
     if int_value <= 0:
+        logging.error("The value must be positive")
         raise argparse.ArgumentTypeError("%s value should be positive" % value)
-    # log = "is_positive(", value, ") called, returned ", int_value
-    # logging.debug(log)
+    log = "is_positive(", value, ") called, returned ", int_value
+    logging.debug(log)
     return int_value
 
 
@@ -42,8 +43,7 @@ if __name__ == '__main__':
                         metavar='DIR')
     parser.add_argument('-l', '--log', action='store', help="set log level", dest='log_lvl',
                         metavar='LEVEL')
-    parser.add_argument('-r', '--rounds', action='store',
-                        help="number of the rounds in simulation", dest='round_no',
+    parser.add_argument('-r', '--rounds', action='store', help="number of the rounds in simulation", dest='round_no',
                         type=is_positive, metavar='NUM')
     parser.add_argument('-s', '--sheep', action='store',
                         help="number of the sheep in simulation ", dest='sheep_no', type=is_positive,
@@ -52,16 +52,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if args.conf_file:
-        init_pos_limit, sheep_move_dist, wolf_move_dist, = parse_config(args.conf_file)
-
-    if args.directory:
-        directory = args.directory
-
     if args.log_lvl:
         if args.log_lvl == "DEBUG":
             lvl = logging.DEBUG
-
         elif args.log_lvl == "INFO":
             lvl = logging.INFO
         elif args.log_lvl == "WARNING":
@@ -72,12 +65,19 @@ if __name__ == '__main__':
             lvl = logging.CRITICAL
         else:
             raise ValueError("Invalid log level!")
-        logging.basicConfig(level=lvl, filename="chase.log",filemode='w')
+
+        logging.basicConfig(level=lvl, filename="chase.log", filemode='w')
+
+    if args.conf_file:
+        init_pos_limit, sheep_move_dist, wolf_move_dist, = parse_config(args.conf_file)
+
+    if args.directory:
+        directory = args.directory
 
     if args.round_no:
-        round_no = args.round_no
+        round_number = args.round_no
     if args.sheep_no:
-        sheep_no = args.sheep_no
+        sheep_number = args.sheep_no
     if args.wait:
         wait = args.wait
 

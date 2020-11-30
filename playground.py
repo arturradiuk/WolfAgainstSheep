@@ -14,7 +14,7 @@ class Playground:  # field for playing
     def __init__(self, wolf, sheep):
         self.wolf = wolf
         self.sheep_list = sheep
-        log = "Playground.__init__(",self,wolf, sheep, ") called"
+        log = "Playground.__init__(", self, wolf, sheep, ") called"
         logging.debug(log)
 
     def get_alive_sheep_number(self):
@@ -22,7 +22,7 @@ class Playground:  # field for playing
         for s in self.sheep_list:
             if (s.alive == True):
                 n += 1
-        log = "Playground.get_alive_sheep_number(", self,") called, returned ",n
+        log = "Playground.get_alive_sheep_number(", self, ") called, returned ", n
         logging.debug(log)
         return n
 
@@ -56,19 +56,27 @@ class Simulation:
         self.alive_sheep = []
 
         wolf = Wolf()
+        log = "Wolf has been created, the initial position is " + wolf.position.__str__()
+        logging.info(log)
         sheep_list = []
         for i in range(sheep_number):
-            sheep_list.append(Sheep(init_pos_limit=10, uid=i))
+            s = Sheep(init_pos_limit=10, uid=i)
+            sheep_list.append(s)
+            log = s.uid, " Sheep has been created, the initial position is " + s.position.__str__()
+            logging.info(log)
+
         self.playground = Playground(wolf, sheep_list)
 
         self.directory = directory
         self.wait = wait
-        log = "Simulation.__init__(", self,init_pos_limit, sheep_move_dist, wolf_move_dist, sheep_number, round_number, directory, wait, ") called"
+        log = "Simulation.__init__(", self, init_pos_limit, sheep_move_dist, wolf_move_dist, sheep_number, round_number, directory, wait, ") called"
         logging.debug(log)
 
     def run_rounds(self):
 
         for i in range(self.round_number):
+            log=i, " round start"
+            logging.info(log)
             # self.playground.draw()  # todo realize as mode
             print(
                 "-- ", i,
@@ -77,10 +85,16 @@ class Simulation:
 
             if self.playground.get_alive_sheep_number() != 0:
                 for sheep in self.playground.sheep_list:
+                    log = sheep.uid," sheep maked move from ", sheep.position.__str__()
                     sheep.move(sheep_move_dist=self.sheep_move_dist)
+                    log = log, " to ", sheep.position.__str__()
+                    logging.info(log)
 
             if self.playground.get_alive_sheep_number() != 0:
+                log = "Wolf maked move from ", self.playground.wolf.position.__str__()
                 self.playground.wolf.move(wolf_move_dist=self.wolf_move_dist, sheep_list=self.playground.sheep_list)
+                log = log, " to ", self.playground.wolf.position.__str__()
+                logging.info(log)
 
             print("@ Alive sheep number: ", self.playground.get_alive_sheep_number())
             print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
@@ -96,6 +110,9 @@ class Simulation:
 
             if self.wait:
                 os.system('read -sn 1 -p "Press any key to continue..."')
+
+            log = i, " round end"
+            logging.info(log)
 
         self.rounds = json.dumps(self.rounds, default=lambda o: o.__dict__)
 
