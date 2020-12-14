@@ -2,6 +2,7 @@ import playground
 import argparse
 from configparser import ConfigParser
 import logging
+import os
 
 
 def parse_config(file):
@@ -51,7 +52,9 @@ if __name__ == '__main__':
     parser.add_argument('-w', '--wait', action='store_true', help="wait for input after each round")
 
     args = parser.parse_args()
-
+    if args.directory:
+        directory = args.directory
+        
     if args.log_lvl:
         if args.log_lvl == "DEBUG":
             lvl = logging.DEBUG
@@ -66,13 +69,19 @@ if __name__ == '__main__':
         else:
             raise ValueError("Invalid log level!")
 
-        logging.basicConfig(level=lvl, filename="chase.log", filemode='w')
+        if directory:
+            if not os.path.exists(directory):
+                os.mkdir(directory)
+            os.chdir(directory)
+            logging.basicConfig(level=lvl, filename="chase.log", filemode='w')
+            os.chdir("../")
+        else:
+            logging.basicConfig(level=lvl, filename="chase.log", filemode='w')
 
     if args.conf_file:
         init_pos_limit, sheep_move_dist, wolf_move_dist, = parse_config(args.conf_file)
 
-    if args.directory:
-        directory = args.directory
+
 
     if args.round_no:
         round_number = args.round_no
