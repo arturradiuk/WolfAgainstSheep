@@ -1,97 +1,73 @@
-import playground
-import argparse
-from configparser import ConfigParser
-import logging
-import os
+import sys
+import time
+
+from PyQt5.QtCore import QThread
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import (QApplication, QLabel, QWidget)
+from PyQt5.QtGui import QPainter, QIcon
+from model.point_model import Point
 
 
-def parse_config(file):
-    config = ConfigParser()
-    config.read(file)
-    init = config.get('Terrain', 'InitPosLimit')
-    sheep = config.get('Movement', 'SheepMoveDist')
-    wolf = config.get('Movement', 'WolfMoveDist')
-    if float(init) < 0 or float(sheep) < 0 or float(wolf) < 0:
-        logging.error("The numbers in conf file must be positive")
-        raise ValueError("Not positive number")
-    log = "parse_config(", file, ") called, returned ", float(init), float(sheep), float(wolf)
-    logging.debug(log)
-    return float(init), float(sheep), float(wolf)
+class MainLogicThread(QThread):
+    element_signal = pyqtSignal(list)
+    add_sheep_signal = pyqtSignal(int)
+
+    def __init__(self, parent=None):
+        super(MainLogicThread, self).__init__(parent=parent)
+
+    def run(self):
+        time.sleep(2)
+        self.element_signal.emit([Point(0, 0)])
+
+    def stop(self):
+        self.terminate()
 
 
-def is_positive(value):
-    int_value = int(value)
-    if int_value <= 0:
-        logging.error("The value must be positive")
-        raise argparse.ArgumentTypeError("%s value should be positive" % value)
-    log = "is_positive(", value, ") called, returned ", int_value
-    logging.debug(log)
-    return int_value
+class MainWindow(QWidget):
+    width = 500
+    height = 500
+    wer = 50  # wolf ellipse radius
+
+    cartesian_zero = [width // 2, height // 2]
+
+    draw_elements = []  # points to be drawn
+
+    def __init__(self, parent=None):
+        super(MainWindow, self).__init__(parent=parent)
+        self._set_configuration()
+        self.mainLogicThread = MainLogicThread(self)
+        self.mainLogicThread.element_signal.connect(self.update_draw_elements)
+        self.mainLogicThread.start()
+
+        # self.draw_elements.append(Point(0, 0))
+        self.show()
+
+    def _set_configuration(self):
+        self.setGeometry(0, 0, self.width, self.height)
+        self.setWindowTitle("WolfAgainstSheep - simulation")
+
+    def closeEvent(self, event):
+        super(MainWindow, self).closeEvent(event)
+        self.mainLogicThread.stop()
+
+    def paintEvent(self, event):
+        painter = QPainter()
+        painter.begin(self)
+        for e in self.draw_elements:
+            self.convert_to_cartesian(e)
+            painter.drawEllipse(e.x - self.wer // 2, e.y - self.wer // 2, self.wer, self.wer)
+
+    def update_draw_elements(self, elements):
+        self.draw_elements = elements
+        self.update()
+
+    def convert_to_cartesian(self, point):
+        point.x = point.x + self.cartesian_zero[0]
+        point.y = point.y + self.cartesian_zero[1]
 
 
-init_pos_limit = 10.0
-sheep_move_dist = 0.5
-wolf_move_dist = 1.0
-sheep_number = 15
-round_number = 50
-wait = False
-directory = None
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', help="configuration file", action='store', dest='conf_file', metavar='FILE')
-    parser.add_argument('-d', '--dir', action='store', help="directory to save data", dest='directory',
-                        metavar='DIR')
-    parser.add_argument('-l', '--log', action='store', help="set log level", dest='log_lvl',
-                        metavar='LEVEL')
-    parser.add_argument('-r', '--rounds', action='store', help="number of the rounds in simulation", dest='round_no',
-                        type=is_positive, metavar='NUM')
-    parser.add_argument('-s', '--sheep', action='store',
-                        help="number of the sheep in simulation ", dest='sheep_no', type=is_positive,
-                        metavar='NUM')
-    parser.add_argument('-w', '--wait', action='store_true', help="wait for input after each round")
-
-    args = parser.parse_args()
-    if args.directory:
-        directory = args.directory
-        
-    if args.log_lvl:
-        if args.log_lvl == "DEBUG":
-            lvl = logging.DEBUG
-        elif args.log_lvl == "INFO":
-            lvl = logging.INFO
-        elif args.log_lvl == "WARNING":
-            lvl = logging.WARNING
-        elif args.log_lvl == "ERROR":
-            lvl = logging.ERROR
-        elif args.log_lvl == "CRITICAL":
-            lvl = logging.CRITICAL
-        else:
-            raise ValueError("Invalid log level!")
-
-        if directory:
-            if not os.path.exists(directory):
-                os.mkdir(directory)
-            os.chdir(directory)
-            logging.basicConfig(level=lvl, filename="chase.log", filemode='w')
-            os.chdir("../")
-        else:
-            logging.basicConfig(level=lvl, filename="chase.log", filemode='w')
-
-    if args.conf_file:
-        init_pos_limit, sheep_move_dist, wolf_move_dist, = parse_config(args.conf_file)
-
-
-
-    if args.round_no:
-        round_number = args.round_no
-    if args.sheep_no:
-        sheep_number = args.sheep_no
-    if args.wait:
-        wait = args.wait
-
-    simulation = playground.Simulation(init_pos_limit=init_pos_limit, sheep_move_dist=sheep_move_dist,
-                                       wolf_move_dist=wolf_move_dist,
-                                       sheep_number=sheep_number, round_number=round_number, directory=directory,
-                                       wait=wait)
-    simulation.run_rounds()
+myApp = QApplication(sys.argv)
+myApp.setWindowIcon(QIcon("resources/wolf.png"))
+window = MainWindow()
+myApp.exec_()
+sys.exit()
