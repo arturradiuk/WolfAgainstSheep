@@ -47,6 +47,12 @@ class Playground:  # field for playing
 
 class Simulation:
 
+    def change_wolf_position(self, new_position):
+        pass
+
+    def add_sheep(self, sheep_position):
+        pass
+
     def __init__(self, init_pos_limit, sheep_move_dist, wolf_move_dist, sheep_number, round_number, directory, wait):
         self.sheep_init_pos_limit = init_pos_limit
         self.sheep_move_dist = sheep_move_dist
