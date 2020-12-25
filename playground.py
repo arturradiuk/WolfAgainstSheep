@@ -1,13 +1,13 @@
 from model.sheep_model import Sheep
 from model.wolf_model import Wolf
+
 import matplotlib.pyplot as plt
+
 import json
 import csv
 import os
 import logging
 
-
-# todo
 
 class Playground:  # field for playing
     sheep_list = None
