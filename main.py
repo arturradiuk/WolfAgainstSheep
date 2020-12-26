@@ -30,8 +30,7 @@ class MainLogicThread(QThread):
                                                 wolf_move_dist=self.wolf_move_dist)
 
     def add_sheep(self, position: Point):
-        position = copy.copy(position)
-        self.simulation.create_sheep(copy.copy(self.convert_from_cartesian(position)))
+        self.simulation.create_sheep(self.convert_from_cartesian(position))
         res = []
         temp_pos = self.simulation.get_alive_sheep_positions()
         for i in range(len(temp_pos)):
@@ -46,7 +45,7 @@ class MainLogicThread(QThread):
         return res
 
     def get_wolf_position(self):
-        return self.convert_to_cartesian(copy.copy( self.simulation.playground.wolf.position))
+        return self.convert_to_cartesian(copy.copy(self.simulation.playground.wolf.position))
 
     def change_wolf_position(self, position: Point):
         self.simulation.change_wolf_position((self.convert_from_cartesian(position)))
@@ -151,6 +150,8 @@ class MainWindow(QMainWindow):
         painter.setBrush(QBrush(Qt.blue, Qt.SolidPattern));
         painter.drawEllipse(int(temp_1), int(temp_2), self.wer, self.wer)
 
+        self.sheep_number_label.setText("sheep: " + str(len(self.draw_elements)))
+
     def update_draw_elements(self, elements):
         self.draw_elements = elements
         self.update()
@@ -159,13 +160,6 @@ class MainWindow(QMainWindow):
         self.wolf_position = self.mainLogicThread.change_wolf_position(position)
         self.update()
 
-    # def convert_to_cartesian(self, point):
-    #     point.x = point.x + self.cartesian_zero[0]
-    #     point.y = point.y + self.cartesian_zero[1]
-    #
-    # def convert_from_cartesian(self, point):
-    #     point.x = point.x + self.cartesian_zero[0]
-    #     point.y = point.y + self.cartesian_zero[1]
 
     def mousePressEvent(self, QMouseEvent):
         # self.draw_elements = [Point(x=QMouseEvent.pos().x(), y=QMouseEvent.pos().y())]
