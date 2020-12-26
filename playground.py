@@ -1,10 +1,12 @@
+import csv
+import json
+import logging
+import os
+
+import matplotlib.pyplot as plt
+
 from model.sheep_model import Sheep
 from model.wolf_model import Wolf
-import matplotlib.pyplot as plt
-import json
-import csv
-import os
-import logging
 
 
 # todo
@@ -48,37 +50,71 @@ class Playground:  # field for playing
 class Simulation:
 
     def change_wolf_position(self, new_position):
-        pass
+        self.wolf.position = new_position
 
-    def add_sheep(self, sheep_position):
-        pass
+    def create_sheep(self, sheep_position):
+        s = Sheep(sheep_position=sheep_position, uid=self.sheep_counter)
+        self.sheep_list.append(s)
+        self.sheep_counter += 1
 
-    def __init__(self, init_pos_limit, sheep_move_dist, wolf_move_dist, sheep_number, round_number, directory, wait):
-        self.sheep_init_pos_limit = init_pos_limit
-        self.sheep_move_dist = sheep_move_dist
-        self.wolf_move_dist = wolf_move_dist
-        self.sheep_number = sheep_number
-        self.round_number = round_number
+    def get_alive_sheep_positions(self):  # todo
+        temp_sheep = []
+        for i in range(len(self.sheep_list)):
+            if self.sheep_list[i].alive:
+                temp_sheep.append(self.sheep_list[i].position)
+        return temp_sheep
 
+    def __init__(self, sheep_move_dist: float, wolf_move_dist: float):
+        self.wolf = Wolf()
+        self.sheep_list = []
         self.rounds = []
         self.alive_sheep = []
 
-        wolf = Wolf()
-        log = "Wolf has been created, the initial position is " + wolf.position.__str__()
-        logging.info(log)
-        sheep_list = []
-        for i in range(sheep_number):
-            s = Sheep(init_pos_limit=10, uid=i)
-            sheep_list.append(s)
-            log = s.uid, " Sheep has been created, the initial position is " + s.position.__str__()
-            logging.info(log)
+        self.sheep_move_dist = sheep_move_dist
+        self.wolf_move_dist = wolf_move_dist
+        self.sheep_counter = 0
+        self.round_counter = 0
 
-        self.playground = Playground(wolf, sheep_list)
+        self.playground = Playground(self.wolf, self.sheep_list)
 
+        self.directory = None
+        self.wait = None
+
+    # def init_playground(self):
+    #     pass
+
+    def init_dir(self, directory):
         self.directory = directory
+
+    def init_dir(self, wait):
         self.wait = wait
-        log = "Simulation.__init__(", self, init_pos_limit, sheep_move_dist, wolf_move_dist, sheep_number, round_number, directory, wait, ") called"
-        logging.debug(log)
+
+    # def __init__(self, sheep_move_dist: float, wolf_move_dist: float, init_pos_limit: int, sheep_number: int,
+    #              round_number, directory: str,
+    #              wait: bool):
+    #
+    #     self.sheep_number = sheep_number
+    #     self.round_number = round_number
+    #
+    #     self.rounds = []
+    #     self.alive_sheep = []
+    #
+    #     wolf = Wolf()
+    #     log = "Wolf has been created, the initial position is " + wolf.position.__str__()
+    #     logging.info(log)
+    #     sheep_list = []
+    #     for i in range(sheep_number):
+    #         s = Sheep(init_pos_limit=10, uid=i)
+    #         sheep_list.append(s)
+    #         log = s.uid, " Sheep has been created, the initial position is " + s.position.__str__()
+    #         logging.info(log)
+    #
+    #     self.playground = Playground(wolf, sheep_list)
+    #
+    #     self.directory = directory
+    #     self.wait = wait
+    #     log = "Simulation.__init__(", self, init_pos_limit, sheep_move_dist, wolf_move_dist, sheep_number, round_number, directory, wait, ") called"
+    #     logging.debug(log)
 
     def run_round(self, index):
         log = index, " round start"
@@ -113,6 +149,8 @@ class Simulation:
         self.rounds.append(round_)
 
         self.alive_sheep.append([index, self.playground.get_alive_sheep_number()])
+
+        self.round_counter += 1
 
         if self.wait:
             os.system('read -sn 1 -p "Press any key to continue..."')

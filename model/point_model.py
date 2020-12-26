@@ -35,3 +35,4 @@ class Point:
         log = "Point.__str__() called, returned " + res
         logging.debug(log)
         return res
+

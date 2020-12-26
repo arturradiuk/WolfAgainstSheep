@@ -12,6 +12,12 @@ class Sheep:
         log = "Sheep.__init__(", init_pos_limit, uid, ") called"
         logging.debug(log)
 
+    def __init__(self, sheep_position, uid):
+        self.position = sheep_position
+        self.uid = uid
+        self.alive = True
+
+
     def move(self, sheep_move_dist):
         if self.alive == True:
             rand_num = random.randint(0, 3)

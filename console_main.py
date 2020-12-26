@@ -1,8 +1,10 @@
-import playground
 import argparse
-from configparser import ConfigParser
 import logging
 import os
+from configparser import ConfigParser
+
+import playground
+from model.point_model import Point
 
 
 def parse_config(file):
@@ -54,7 +56,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.directory:
         directory = args.directory
-        
+
     if args.log_lvl:
         if args.log_lvl == "DEBUG":
             lvl = logging.DEBUG
@@ -81,8 +83,6 @@ if __name__ == '__main__':
     if args.conf_file:
         init_pos_limit, sheep_move_dist, wolf_move_dist, = parse_config(args.conf_file)
 
-
-
     if args.round_no:
         round_number = args.round_no
     if args.sheep_no:
@@ -90,8 +90,19 @@ if __name__ == '__main__':
     if args.wait:
         wait = args.wait
 
-    simulation = playground.Simulation(init_pos_limit=init_pos_limit, sheep_move_dist=sheep_move_dist,
-                                       wolf_move_dist=wolf_move_dist,
-                                       sheep_number=sheep_number, round_number=round_number, directory=directory,
-                                       wait=wait)
-    simulation.run_rounds()
+    # simulation = playground.Simulation(sheep_move_dist=sheep_move_dist,
+    #                                    wolf_move_dist=wolf_move_dist, init_pos_limit=init_pos_limit,
+    #                                    sheep_number=sheep_number, round_number=round_number, directory=directory,
+    #                                    wait=wait)
+    # simulation.run_rounds()
+    #
+    simulation = playground.Simulation(sheep_move_dist=sheep_move_dist, wolf_move_dist=wolf_move_dist)
+
+    # simulation.create_sheep(Point(3, 3))
+    # simulation.create_sheep(Point(2, 1))
+    simulation.create_sheep(Point(3, 3))
+
+    # simulation.init_playground()
+
+    for i in range(10):
+        simulation.run_round(simulation.round_counter)
