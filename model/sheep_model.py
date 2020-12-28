@@ -1,6 +1,7 @@
-from model.point_model import Point
-import random
 import logging
+import random
+
+from model.point_model import Point
 
 
 class Sheep:
@@ -17,9 +18,8 @@ class Sheep:
         self.uid = uid
         self.alive = True
 
-
     def move(self, sheep_move_dist):
-        if self.alive == True:
+        if self.alive:
             rand_num = random.randint(0, 3)
             if rand_num == 0:
                 self.position.x += sheep_move_dist

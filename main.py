@@ -5,29 +5,36 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import QThread, Qt
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QPainter, QIcon, QBrush, QPen
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QMessageBox, QLabel)
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QMessageBox, QLabel, QSlider)
 
 import playground
 from model.point_model import Point
 
+WindowWidth = 500
+WindowHeight = WindowWidth  # suppose that height = width
+
 
 class MainLogicThread(QThread):
-    width = 500
-    height = 500
-    wer = 50  # wolf ellipse radius
-
-    cartesian_zero = [width // 2, height // 2]  # todo change to Point
-
     element_signal = pyqtSignal(list)
     add_sheep_signal = pyqtSignal(int)
-    sheep_move_dist = 0.5
-    wolf_move_dist = 1.0
-    coef = 50
 
-    def __init__(self, parent=None):
+    def set_simulation_parameters(self, sheep_move_dist, wolf_move_dist, init_pos_limit, WindowWidth):
+        self.sheep_move_dist = sheep_move_dist
+        self.wolf_move_dist = wolf_move_dist
+        self.init_pos_limit = init_pos_limit
+        self.cart_coef = WindowWidth / init_pos_limit
+        self.simulation.set_simulation_parameters(sheep_move_dist=sheep_move_dist, wolf_move_dist=wolf_move_dist)
+        f = 5
+
+    def __init__(self, sheep_move_dist, wolf_move_dist, init_pos_limit, parent=None):
         super(MainLogicThread, self).__init__(parent=parent)
-        self.simulation = playground.Simulation(sheep_move_dist=self.sheep_move_dist,
-                                                wolf_move_dist=self.wolf_move_dist)
+        self.sheep_move_dist = sheep_move_dist
+        self.wolf_move_dist = wolf_move_dist
+        self.init_pos_limit = init_pos_limit
+        self.cart_coef = WindowWidth / init_pos_limit
+
+        self.simulation = playground.Simulation(sheep_move_dist=sheep_move_dist,
+                                                wolf_move_dist=wolf_move_dist)
 
     def add_sheep(self, position: Point):
         self.simulation.create_sheep(self.convert_from_cartesian(position))
@@ -36,6 +43,10 @@ class MainLogicThread(QThread):
         for i in range(len(temp_pos)):
             res.append(self.convert_to_cartesian(copy.copy(temp_pos[i])))
         return res
+
+    def change_wolf_position(self, position: Point):
+        self.simulation.change_wolf_position((self.convert_from_cartesian(position)))
+        return self.convert_to_cartesian(copy.copy(self.simulation.playground.wolf.position))
 
     def get_sheep_positions(self):
         res = []
@@ -47,9 +58,22 @@ class MainLogicThread(QThread):
     def get_wolf_position(self):
         return self.convert_to_cartesian(copy.copy(self.simulation.playground.wolf.position))
 
-    def change_wolf_position(self, position: Point):
-        self.simulation.change_wolf_position((self.convert_from_cartesian(position)))
-        return self.convert_to_cartesian(copy.copy(self.simulation.playground.wolf.position))
+    def run_round(self):
+        self.simulation.run_round(self.simulation.round_counter)
+
+    def reset(self):
+        self.simulation.remove_sheep()
+        self.simulation.change_wolf_position(Point(0, 0))
+
+    def convert_to_cartesian(self, point):
+        point.x = int((point.x + 5) * self.cart_coef)
+        point.y = int((point.y + 5) * self.cart_coef)
+        return point
+
+    def convert_from_cartesian(self, point):
+        point.x = (point.x / self.cart_coef) - 5  # can't be casted to int
+        point.y = (point.y / self.cart_coef) - 5  # can't be casted to int
+        return point
 
     def run(self):
         self.element_signal.emit([Point(1, 1)])
@@ -57,41 +81,27 @@ class MainLogicThread(QThread):
     def stop(self):
         self.terminate()
 
-    def convert_to_cartesian(self, point):
-        point.x = int((point.x + 5) * self.coef)
-        point.y = int((point.y + 5) * self.coef)
-        return point  # todo check necessity
-
-    def convert_from_cartesian(self, point):
-        point.x = (point.x / self.coef) - 5  # can't be casted to int
-        point.y = (point.y / self.coef) - 5  # can't be casted to int
-        return point
-
-    def run_round(self):
-        self.simulation.run_round(self.simulation.round_counter)
-        g = 5
 
 class MainWindow(QMainWindow):
-    width = 500
-    height = 500
-    wer = 50  # wolf ellipse radius
+    wer = WindowWidth / 10  # wolf ellipse radius
+    ser = wer * 0.6  # wolf ellipse radius, 60%
+    init_pos_limit = wer / 5
+    wolf_move_dist = init_pos_limit * 0.1
+    sheep_move_dist = wolf_move_dist / 2
+    cartesian_zero = Point(WindowWidth // 2, WindowWidth // 2)  # suppose that height = width
 
-    cartesian_zero = [width // 2, height // 2]  # todo change to Point
-
-    draw_elements = []  # points to be drawn
+    sheep_positions = []  # points to be drawn
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent=parent)
 
-        self.mainLogicThread = MainLogicThread(self)
+        self.mainLogicThread = MainLogicThread(sheep_move_dist=self.sheep_move_dist, wolf_move_dist=self.wolf_move_dist,
+                                               init_pos_limit=self.init_pos_limit)
+
         self.mainLogicThread.element_signal.connect(self.update_draw_elements)
-        self.wolf_position = self.mainLogicThread.change_wolf_position(
-            Point(self.cartesian_zero[0], self.cartesian_zero[1]))
-
+        self.wolf_position = self.mainLogicThread.change_wolf_position(copy.copy(self.cartesian_zero))
         self._set_configuration()
-
         # self.mainLogicThread.start()
-
         self.UiComponents()
         self.show()
 
@@ -107,27 +117,43 @@ class MainWindow(QMainWindow):
         self.sheep_number_label = QLabel("sheep: 15", self)
         self.sheep_number_label.setGeometry(210, 0, 100, 30)
 
-    def reset_button_click(self):
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Information)
-        msg.setWindowTitle("Information")
-        msg.setText("Last sheep has been eaten")
-        x = msg.exec_()
+        self.slider = QSlider(Qt.Horizontal, self)
+        self.slider.setMinimum(0)
+        self.slider.setMaximum(4)
+        self.slider.setTickInterval(1)
+        self.slider.setValue(2)
+        self.slider.setTickPosition(QSlider.TicksBelow)
+        self.slider.setGeometry(305, 0, 100, 30)
+        self.slider.valueChanged.connect(self.change_scale)
 
-    def step_button_click(self):
-        self.mainLogicThread.run_round()
-        self.draw_elements = self.mainLogicThread.get_sheep_positions()
+    def reset_button_click(self):
+        self.mainLogicThread.reset()
+        self.sheep_positions = self.mainLogicThread.get_sheep_positions()
         self.wolf_position = self.mainLogicThread.get_wolf_position()
         self.update()
+
         # msg = QMessageBox()
-        # msg.setIcon(QMessageBox.Warning)
-        # msg.setWindowTitle("Warning")
-        # msg.setText("This is the main text!")
+        # msg.setIcon(QMessageBox.Information)
+        # msg.setWindowTitle("Information")
+        # msg.setText("Last sheep has been eaten")
         # x = msg.exec_()
+
+    def step_button_click(self):
+        if len(self.sheep_positions) != 0:
+            self.mainLogicThread.run_round()
+            self.sheep_positions = self.mainLogicThread.get_sheep_positions()
+            self.wolf_position = self.mainLogicThread.get_wolf_position()
+            self.update()
+        else:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Warning)
+            msg.setWindowTitle("Warning")
+            msg.setText("There is no sheep on the field.")
+            x = msg.exec_()
 
     def _set_configuration(self):
         self.setAutoFillBackground(True)
-        self.setGeometry(0, 0, self.width, self.height)
+        self.setGeometry(0, 0, WindowWidth, WindowWidth)  # suppose that height = width
         self.setWindowTitle("WolfAgainstSheep - simulation")
 
     def closeEvent(self, event):
@@ -137,38 +163,45 @@ class MainWindow(QMainWindow):
     def paintEvent(self, event):
         painter = QPainter()
         painter.begin(self)
-        for e in self.draw_elements:
-            temp_1 = e.x - self.wer // 2
-            temp_2 = e.y - self.wer // 2
+        for e in self.sheep_positions:
+            temp_1 = e.x - self.ser // 2
+            temp_2 = e.y - self.ser // 2
             painter.setPen(QPen(Qt.black, 12, Qt.SolidLine))
             painter.setBrush(QBrush(Qt.green, Qt.SolidPattern))
-            painter.drawEllipse(int(temp_1), int(temp_2), self.wer, self.wer)
+            painter.drawEllipse(int(temp_1), int(temp_2), int(self.ser), int(self.ser))
 
         temp_1 = self.wolf_position.x - self.wer // 2
         temp_2 = self.wolf_position.y - self.wer // 2
-        painter.setPen(QPen(Qt.black, 12, Qt.SolidLine));
-        painter.setBrush(QBrush(Qt.blue, Qt.SolidPattern));
-        painter.drawEllipse(int(temp_1), int(temp_2), self.wer, self.wer)
+        painter.setPen(QPen(Qt.black, 12, Qt.SolidLine))
+        painter.setBrush(QBrush(Qt.blue, Qt.SolidPattern))
+        painter.drawEllipse(int(temp_1), int(temp_2), int(self.wer), int(self.wer))
 
-        self.sheep_number_label.setText("sheep: " + str(len(self.draw_elements)))
+        self.sheep_number_label.setText("sheep: " + str(len(self.sheep_positions)))
+
+    def change_scale(self):
+        # WindowWidth = 250
+        WindowWidth = self.slider.value()*125+250
+        self.wer = WindowWidth / 10  # wolf ellipse radius
+        self.ser = self.wer * 0.6  # wolf ellipse radius, 60%
+        self.init_pos_limit = self.wer / 5
+        self.wolf_move_dist = self.init_pos_limit * 0.1
+        self.sheep_move_dist = self.wolf_move_dist / 2
+        self.cartesian_zero = Point(WindowWidth // 2, WindowWidth // 2)  # suppose that height = width
+        self.mainLogicThread.set_simulation_parameters(self.sheep_move_dist, self.wolf_move_dist, self.init_pos_limit,
+                                                       WindowWidth)
+        self.update()
 
     def update_draw_elements(self, elements):
-        self.draw_elements = elements
+        self.sheep_positions = elements
         self.update()
 
     def update_wolf_position(self, position):
         self.wolf_position = self.mainLogicThread.change_wolf_position(position)
         self.update()
 
-
     def mousePressEvent(self, QMouseEvent):
-        # self.draw_elements = [Point(x=QMouseEvent.pos().x(), y=QMouseEvent.pos().y())]
-        # self.update()
         if QMouseEvent.button() == QtCore.Qt.RightButton:
             self.update_wolf_position(Point(QMouseEvent.pos().x(), QMouseEvent.pos().y()))
-
-        # print(QMouseEvent.pos().x())
-        # print(QMouseEvent.pos().y())
 
         if QMouseEvent.button() == QtCore.Qt.LeftButton:
             self.update_draw_elements(

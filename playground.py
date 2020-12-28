@@ -49,6 +49,13 @@ class Playground:  # field for playing
 
 class Simulation:
 
+    def set_simulation_parameters(self, sheep_move_dist, wolf_move_dist):
+        self.sheep_move_dist = sheep_move_dist
+        self.wolf_move_dist = wolf_move_dist
+
+    def remove_sheep(self):
+        self.playground.sheep_list.clear()
+
     def change_wolf_position(self, new_position):
         self.wolf.position = new_position
 
@@ -64,7 +71,7 @@ class Simulation:
                 temp_sheep.append(self.sheep_list[i].position)
         return temp_sheep
 
-    def __init__(self, sheep_move_dist: float, wolf_move_dist: float):
+    def __init__(self, sheep_move_dist: float, wolf_move_dist: float):  # todo
         self.wolf = Wolf()
         self.sheep_list = []
         self.rounds = []
