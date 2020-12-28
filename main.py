@@ -5,7 +5,8 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import QThread, Qt
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QPainter, QIcon, QBrush, QPen
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QMessageBox, QLabel, QSlider)
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QMessageBox, QLabel, QSlider, QAction,
+                             QColorDialog)
 
 import playground
 from model.point_model import Point
@@ -24,7 +25,6 @@ class MainLogicThread(QThread):
         self.init_pos_limit = init_pos_limit
         self.cart_coef = WindowWidth / init_pos_limit
         self.simulation.set_simulation_parameters(sheep_move_dist=sheep_move_dist, wolf_move_dist=wolf_move_dist)
-        f = 5
 
     def __init__(self, sheep_move_dist, wolf_move_dist, init_pos_limit, parent=None):
         super(MainLogicThread, self).__init__(parent=parent)
@@ -89,6 +89,8 @@ class MainWindow(QMainWindow):
     wolf_move_dist = init_pos_limit * 0.1
     sheep_move_dist = wolf_move_dist / 2
     cartesian_zero = Point(WindowWidth // 2, WindowWidth // 2)  # suppose that height = width
+    sheep_color = Qt.green
+    wolf_color = Qt.red
 
     sheep_positions = []  # points to be drawn
 
@@ -107,15 +109,15 @@ class MainWindow(QMainWindow):
 
     def UiComponents(self):
         step_btn = QPushButton("step", self)
-        step_btn.setGeometry(0, 0, 100, 30)
+        step_btn.setGeometry(0, 25, 100, 30)
         step_btn.clicked.connect(self.step_button_click)
 
         reset_btn = QPushButton("reset", self)
-        reset_btn.setGeometry(105, 0, 100, 30)
+        reset_btn.setGeometry(105, 25, 100, 30)
         reset_btn.clicked.connect(self.reset_button_click)
 
         self.sheep_number_label = QLabel("sheep: 15", self)
-        self.sheep_number_label.setGeometry(210, 0, 100, 30)
+        self.sheep_number_label.setGeometry(210, 25, 100, 30)
 
         self.slider = QSlider(Qt.Horizontal, self)
         self.slider.setMinimum(0)
@@ -123,8 +125,51 @@ class MainWindow(QMainWindow):
         self.slider.setTickInterval(1)
         self.slider.setValue(2)
         self.slider.setTickPosition(QSlider.TicksBelow)
-        self.slider.setGeometry(305, 0, 100, 30)
+        self.slider.setGeometry(305, 25, 100, 30)
         self.slider.valueChanged.connect(self.change_scale)
+
+        main_menu = self.menuBar()
+        file_menu = main_menu.addMenu('File')
+
+        open_action = QAction("Open", self)
+        # open_action.triggered.connect() #todo
+        file_menu.addAction(open_action)
+
+        save_action = QAction("Save", self)
+        # save_action.triggered.connect() # todo
+        file_menu.addAction(save_action)
+
+        quit_action = QAction("Quit", self)
+        quit_action.triggered.connect(self.close)
+        file_menu.addAction(quit_action)
+
+        settings_menu = main_menu.addMenu('Settings')
+
+        wolf_color_action = QAction("Wolf color", self)
+        wolf_color_action.triggered.connect(self.pick_wolf_color)
+        settings_menu.addAction(wolf_color_action)
+
+        sheep_color_action = QAction("Sheep color", self)
+        sheep_color_action.triggered.connect(self.pick_sheep_color)
+        settings_menu.addAction(sheep_color_action)
+
+        background_color_action = QAction("Background color", self)
+        background_color_action.triggered.connect(self.pick_background_color)
+        settings_menu.addAction(background_color_action)
+
+        # self.setStyleSheet("QMainWindow {background: 'cyan';}")
+
+    def pick_background_color(self):
+        color = QColorDialog.getColor()
+        self.setStyleSheet("QMainWindow { background-color: %s}" % color.name())
+
+    def pick_wolf_color(self):
+        self.wolf_color = QColorDialog.getColor()
+        self.update()
+
+    def pick_sheep_color(self):
+        self.sheep_color = QColorDialog.getColor()
+        self.update()
 
     def reset_button_click(self):
         self.mainLogicThread.reset()
@@ -167,13 +212,13 @@ class MainWindow(QMainWindow):
             temp_1 = e.x - self.ser // 2
             temp_2 = e.y - self.ser // 2
             painter.setPen(QPen(Qt.black, 12, Qt.SolidLine))
-            painter.setBrush(QBrush(Qt.green, Qt.SolidPattern))
+            painter.setBrush(QBrush(self.sheep_color, Qt.SolidPattern))
             painter.drawEllipse(int(temp_1), int(temp_2), int(self.ser), int(self.ser))
 
         temp_1 = self.wolf_position.x - self.wer // 2
         temp_2 = self.wolf_position.y - self.wer // 2
         painter.setPen(QPen(Qt.black, 12, Qt.SolidLine))
-        painter.setBrush(QBrush(Qt.blue, Qt.SolidPattern))
+        painter.setBrush(QBrush(self.wolf_color, Qt.SolidPattern))
         painter.drawEllipse(int(temp_1), int(temp_2), int(self.wer), int(self.wer))
 
         self.sheep_number_label.setText("sheep: " + str(len(self.sheep_positions)))
