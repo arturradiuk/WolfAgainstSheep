@@ -1,31 +1,25 @@
 from model.point_model import Point
 import math
-import logging
-
 
 class Wolf:
 
     def __init__(self):
         self.position = Point()
-        log = "Wolf.__init__() called"
-        logging.debug(log)
 
     def move(self, wolf_move_dist, sheep_list):
         distances = []
 
         for i in range(len(sheep_list)):
-            if (sheep_list[i].alive == True):
+            if sheep_list[i].alive == True:
                 distances.append([i, self.position.calculate_distance(sheep_list[i].position)])
 
         if distances.__len__() != 0:
             distances.sort(key=lambda n: n[1], reverse=False)
-            if (sheep_list.__len__() != 0):
-                if (distances[0][1] < wolf_move_dist):
+            if sheep_list.__len__() != 0:
+                if distances[0][1] < wolf_move_dist:
                     self.position = sheep_list[distances[0][0]].position
-                    print(sheep_list[distances[0][0]], " is killed")
                     sheep_list[distances[0][0]].alive = False
                     sheep_list[distances[0][0]].position = None
-
 
                 else:
                     closest_dist = distances[0][1]
@@ -35,36 +29,23 @@ class Wolf:
                         math.fabs(sheep_list[distances[0][0]].position.y - self.position.y))) / closest_dist
 
                     if sheep_list[distances[0][0]].position.x > 0:  # todo remove duplicates
-                        if (self.position.x - sheep_list[distances[0][0]].position.x > 0):
+                        if self.position.x - sheep_list[distances[0][0]].position.x > 0:
                             self.position.x -= w_x
                         else:
                             self.position.x += w_x
                     else:
-                        if (self.position.x - sheep_list[distances[0][0]].position.x > 0):
+                        if self.position.x - sheep_list[distances[0][0]].position.x > 0:
                             self.position.x -= w_x
                         else:
                             self.position.x += w_x
 
                     if sheep_list[distances[0][0]].position.y > 0:
-                        if (self.position.y - sheep_list[distances[0][0]].position.y > 0):
+                        if self.position.y - sheep_list[distances[0][0]].position.y > 0:
                             self.position.y -= w_y
                         else:
                             self.position.y += w_y
                     else:
-                        if (self.position.y - sheep_list[distances[0][0]].position.y > 0):
+                        if self.position.y - sheep_list[distances[0][0]].position.y > 0:
                             self.position.y -= w_y
                         else:
                             self.position.y += w_y
-        log = "Wolf.move() called"
-        logging.debug(log)
-
-    def __str__(self):
-        temp = "# Wolf: position = " + self.position.__str__()
-        log = "Wolf.move() called, returned ", temp
-        logging.debug(log)
-        return temp
-
-    def __repr__(self):
-        log = "Wolf.__repr__() called, returned ", str(self)
-        logging.debug(log)
-        return str(self)

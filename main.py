@@ -1,7 +1,6 @@
 import copy
 import sys
 import time
-from operator import sub
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import QThread, Qt
@@ -19,15 +18,15 @@ WindowHeight = WindowWidth  # suppose that height = width
 
 class MainLogicThread(QThread):
     update_state = pyqtSignal()
-    delay = 0.5
+    delay = 1.0
 
     stopper = False
 
-    def set_simulation_parameters(self, sheep_move_dist, wolf_move_dist, init_pos_limit, WindowWidth):
+    def set_simulation_parameters(self, sheep_move_dist, wolf_move_dist, init_pos_limit, window_width):
         self.sheep_move_dist = sheep_move_dist
         self.wolf_move_dist = wolf_move_dist
         self.init_pos_limit = init_pos_limit
-        self.cart_coef = WindowWidth / init_pos_limit
+        self.cart_coef = window_width / init_pos_limit
         self.simulation.set_simulation_parameters(sheep_move_dist=sheep_move_dist, wolf_move_dist=wolf_move_dist)
 
     def __init__(self, sheep_move_dist, wolf_move_dist, init_pos_limit, parent=None):
@@ -83,14 +82,12 @@ class MainLogicThread(QThread):
 
     def run(self):
         while len(self.get_sheep_positions()) != 0 and (not self.stopper):
-            self.simulation.run_round(self.simulation.round_counter)
             time.sleep(self.delay)
+            self.simulation.run_round(self.simulation.round_counter)
             self.update_state.emit()
-        # self.element_signal.emit([Point(1, 1)])
 
     def stop(self):
         self.stopper = True
-        # self.terminate()
 
 
 class MainWindow(QMainWindow):
@@ -100,8 +97,9 @@ class MainWindow(QMainWindow):
     wolf_move_dist = init_pos_limit * 0.1
     sheep_move_dist = wolf_move_dist / 2
     cartesian_zero = Point(WindowWidth // 2, WindowWidth // 2)  # suppose that height = width
-    sheep_color = QColor(212, 123, 123)
-    wolf_color = QColor(133, 133, 133)
+    sheep_color = QColor(6, 255, 68)
+    wolf_color = QColor(255, 0, 101)
+    active_click = True
 
     sheep_positions = []  # points to be drawn
 
@@ -109,6 +107,14 @@ class MainWindow(QMainWindow):
         self.wolf_position = self.mainLogicThread.get_wolf_position()
         self.sheep_positions = self.mainLogicThread.get_sheep_positions()
         self.update()
+
+        if len(self.sheep_positions) == 0:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setWindowTitle("Information")
+            msg.setText("Last sheep has been eaten")
+            x = msg.exec_()
+            self.start_stop_btn_action(True)
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent=parent)
@@ -120,29 +126,39 @@ class MainWindow(QMainWindow):
 
         self.wolf_position = self.mainLogicThread.change_wolf_position(copy.copy(self.cartesian_zero))
         self._set_configuration()
-        # self.mainLogicThread.start()
-        self.UiComponents()
+        self.ui_component_conf()
         self.show()
 
-    def start_stop_btn_action(self):
-        if self.start_stop_btn.text() == "Start":
+    def start_stop_btn_action(self, par=False):
+        if self.start_stop_btn.text() == "Start" and not (par) and not len(self.sheep_positions) == 0:
             self.start_stop_btn.setText("Stop")
             self.mainLogicThread.stopper = False
             self.mainLogicThread.start()
-            # todo not active button
+
+            self.reset_btn.setEnabled(False)
+            self.step_btn.setEnabled(False)
+            self.slider.setEnabled(False)
+            self.menuBar().setEnabled(False)
+            self.active_click = False
 
         else:
             self.start_stop_btn.setText("Start")
             self.mainLogicThread.stop()
 
-    def UiComponents(self):
-        step_btn = QPushButton("step", self)
-        step_btn.setGeometry(0, 25, 100, 30)
-        step_btn.clicked.connect(self.step_button_click)
+            self.reset_btn.setEnabled(True)
+            self.step_btn.setEnabled(True)
+            self.slider.setEnabled(True)
+            self.menuBar().setEnabled(True)
+            self.active_click = True
 
-        reset_btn = QPushButton("reset", self)
-        reset_btn.setGeometry(105, 25, 100, 30)
-        reset_btn.clicked.connect(self.reset_button_click)
+    def ui_component_conf(self):
+        self.step_btn = QPushButton("step", self)
+        self.step_btn.setGeometry(0, 25, 100, 30)
+        self.step_btn.clicked.connect(self.step_button_click)
+
+        self.reset_btn = QPushButton("reset", self)
+        self.reset_btn.setGeometry(105, 25, 100, 30)
+        self.reset_btn.clicked.connect(self.reset_button_click)
 
         self.sheep_number_label = QLabel("sheep: 15", self)
         self.sheep_number_label.setGeometry(210, 25, 100, 30)
@@ -207,7 +223,7 @@ class MainWindow(QMainWindow):
         radio_buttons[0].setGeometry(10, 100, 180, 25)
         radio_buttons[0].clicked.connect(radio_button_toggle)
 
-        radio_buttons.append(QRadioButton("1", self.settings_window))
+        radio_buttons.append(QRadioButton("1.0", self.settings_window))
         radio_buttons[1].setGeometry(10, 120, 180, 25)
         radio_buttons[1].clicked.connect(radio_button_toggle)
 
@@ -215,19 +231,16 @@ class MainWindow(QMainWindow):
         radio_buttons[2].setGeometry(10, 140, 180, 25)
         radio_buttons[2].clicked.connect(radio_button_toggle)
 
-        radio_buttons.append(QRadioButton("2", self.settings_window))
+        radio_buttons.append(QRadioButton("2.0", self.settings_window))
         radio_buttons[3].setGeometry(10, 160, 180, 25)
         radio_buttons[3].clicked.connect(radio_button_toggle)
 
         for i in range(4):
-            if(str(self.mainLogicThread.delay) == radio_buttons[i].text()):
+            if str(self.mainLogicThread.delay) == radio_buttons[i].text():
                 radio_buttons[i].setChecked(True)
                 break
 
         self.settings_window.show()
-
-
-
 
     def pick_background_color(self):
         color = QColorDialog.getColor()
@@ -253,12 +266,6 @@ class MainWindow(QMainWindow):
         self.wolf_position = self.mainLogicThread.get_wolf_position()
         self.update()
 
-        # msg = QMessageBox()
-        # msg.setIcon(QMessageBox.Information)
-        # msg.setWindowTitle("Information")
-        # msg.setText("Last sheep has been eaten")
-        # x = msg.exec_()
-
     def step_button_click(self):
         if len(self.sheep_positions) != 0:
             self.mainLogicThread.run_round()
@@ -281,7 +288,6 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).closeEvent(event)
         if hasattr(self, 'settings_window'):
             self.settings_window.hide()
-        # self.mainLogicThread.stop()
 
     def file_open(self):
         options = QFileDialog.Options()
@@ -289,7 +295,6 @@ class MainWindow(QMainWindow):
         fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
                                                   "JSON Files (*.json)", options=options)
         if fileName:
-            print(fileName)
             self.read_simulation_conf_info(fileName=fileName)
 
     def read_simulation_conf_info(self, fileName):
@@ -314,7 +319,6 @@ class MainWindow(QMainWindow):
 
         self.mainLogicThread.delay = simulation_conf['delay']
 
-
         self.sheep_color = QColor(simulation_conf['sheep_color'])
         self.wolf_color = QColor(simulation_conf['wolf_color'])
         self.setStyleSheet("QMainWindow { background-color: %s}" % QColor(simulation_conf['background_color']).name())
@@ -326,7 +330,6 @@ class MainWindow(QMainWindow):
         fileName, _ = QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", "",
                                                   "JSON Files (*.json)", options=options)
         if fileName:
-            print(fileName)
             self.write_simulation_conf_info(file_name=fileName)
 
     def write_simulation_conf_info(self, file_name):
@@ -391,12 +394,13 @@ class MainWindow(QMainWindow):
         self.update()
 
     def mousePressEvent(self, QMouseEvent):
-        if QMouseEvent.button() == QtCore.Qt.RightButton:
-            self.update_wolf_position(Point(QMouseEvent.pos().x(), QMouseEvent.pos().y()))
+        if self.active_click:
+            if QMouseEvent.button() == QtCore.Qt.RightButton:
+                self.update_wolf_position(Point(QMouseEvent.pos().x(), QMouseEvent.pos().y()))
 
-        if QMouseEvent.button() == QtCore.Qt.LeftButton:
-            self.update_draw_elements(
-                self.mainLogicThread.add_sheep(Point(x=QMouseEvent.pos().x(), y=QMouseEvent.pos().y())))
+            if QMouseEvent.button() == QtCore.Qt.LeftButton:
+                self.update_draw_elements(
+                    self.mainLogicThread.add_sheep(Point(x=QMouseEvent.pos().x(), y=QMouseEvent.pos().y())))
 
 
 myApp = QApplication(sys.argv)
